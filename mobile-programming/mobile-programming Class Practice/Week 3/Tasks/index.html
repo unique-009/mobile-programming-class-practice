@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>jQuery ATM/Business Exercise</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #01132e;
+      --cyan:      #0de3ff;
+      --cyan-dim:  rgba(13,227,255,0.12);
+      --cyan-glow: rgba(13,227,255,0.28);
+      --btn-bg:    rgba(13,227,255,0.05);
+      --btn-border: rgba(13,227,255,0.3);
+      --btn-hover-bg: rgba(13,227,255,0.15);
+      --card-bg:   linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+      --border:    rgba(13,227,255,0.25);
+      --text:      #e8f4ff;
+      --muted:     #6a90b0;
+      --bio-highlight: var(--cyan);
+      --name-color: var(--cyan);
+      --chip-color: var(--cyan);
+      --radius:    20px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 65% 45% at 50% 0%,  rgba(0,58,145,0.4) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 100%, rgba(13,227,255,0.08) 0%, transparent 60%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      text-align: center;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    h1 span { color: var(--cyan); }
+    .subtitle {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    /* ── main layout ── */
+    .layout {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    /* ── glass card base ── */
+    .glass {
+      background: var(--card-bg);
+      border: 2.5px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
+    }
+
+    /* ── ATM/Business Card ── */
+    #profile-card {
+      width: 100%;
+      max-width: 510px;
+      height: 285px;
+      padding: 30px;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    #profile-card::before {
+      content: 'PREMIUM ACCESS';
+      position: absolute;
+      top: 28px; right: -45px;
+      width: 170px;
+      background: var(--cyan);
+      color: var(--bg);
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 5px 0;
+      transform: rotate(45deg);
+      text-align: center;
+      letter-spacing: 0.1em;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      z-index: 5;
+    }
+
+    .card-left {
+      flex: 0 0 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card-right {
+      flex: 1;
+      padding-left: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .atm-chip {
+      width: 82px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+    .atm-chip svg {
+      width: 100%;
+      height: 100%;
+      fill: var(--chip-color);
+      transition: fill 0.4s ease;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    }
+
+    #profile-photo {
+      width: 90px;
+      height: 90px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 2px solid var(--cyan);
+      background: rgba(0,0,0,0.2);
+      display: none; /* Hidden by default */
+    }
+
+    #student-name {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--name-color);
+      display: none;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    #student-bio {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+      display: none;
+    }
+    #student-bio em { color: var(--bio-highlight); font-style: normal; font-weight: 600; }
+
+    #skills-list {
+      list-style: none;
+      display: none; /* Initially hidden */
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      width: fit-content;
+    }
+    #skills-list li {
+      background: var(--cyan-dim);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.65rem;
+      color: var(--cyan);
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      width: max-content;
+    }
+
+    #nickname-display {
+      position: absolute;
+      bottom: 25px;
+      right: 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--cyan);
+      opacity: 0.8;
+    }
+
+    /* ── Controls ── */
+    .right-col {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-block {
+      padding: 20px;
+    }
+    .sec-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sec-label::before {
+      content: '';
+      width: 8px; height: 8px;
+      background: var(--cyan);
+      border-radius: 2px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1.5px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--cyan);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    button:hover {
+      background: var(--btn-hover-bg);
+      border-color: var(--cyan);
+      transform: translateY(-2px);
+    }
+    button:active { transform: translateY(0); }
+
+    button.active {
+      background: var(--cyan);
+      color: var(--bg);
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    button.active:hover {
+      box-shadow: 0 0 30px var(--cyan-glow);
+    }
+
+    /* Input Styling */
+    #nickname-input {
+      display: none; /* Initially hidden */
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+    }
+    #nickname-input:focus { border-color: var(--cyan); }
+
+    /* ── output ── */
+    #output-box {
+      width: 100%;
+      padding: 20px;
+      margin-top: 10px;
+    }
+    #output {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      min-height: 45px;
+      padding: 12px 18px;
+      background: rgba(0,0,0,0.3);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+    }
+
+    /* States */
+    body.red-mode {
+      --bg: #1a0505;
+      --cyan: #ff4d4d;
+      --cyan-dim: rgba(255,77,77,0.15);
+      --cyan-glow: rgba(255,77,77,0.35);
+      --btn-bg: rgba(255,77,77,0.08);
+      --btn-border: rgba(255,77,77,0.3);
+      --btn-hover-bg: rgba(255,77,77,0.2);
+      --border: rgba(255,77,77,0.3);
+      --muted: #ff9999;
+      --bio-highlight: #ff3333;
+      --name-color: #ffb3b3;
+      --chip-color: #ff4d4d;
+      background-image:
+        radial-gradient(ellipse 65% 45% at 50% 0%,  rgba(107,15,15,0.4) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255,77,77,0.08) 0%, transparent 60%);
+    }
+
+    #profile-card.red-theme {
+      background: linear-gradient(135deg, #4d0a0a 0%, #2b0505 100%);
+      border-color: #ff4d4d;
+    }
+    #profile-card.red-theme .atm-chip { filter: none; }
+
+  </style>
+</head>
+<body>
+
+<h1>jQuery <span>Mastery</span></h1>
+
+<div class="layout">
+
+  <!-- Card (Top Middle) -->
+  <div id="profile-card" class="glass">
+    <div class="card-left">
+      <div class="atm-chip">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path d="M28,30.426H4c-1.337,0-2.425-1.089-2.425-2.426V4c0-1.337,1.088-2.425,2.425-2.425h24
+            c1.337,0,2.426,1.088,2.426,2.425v24C30.426,29.337,29.337,30.426,28,30.426z M16.425,29.574H28c0.868,0,1.574-0.706,1.574-1.574
+            v-2.574H25c-0.113,0-0.221-0.045-0.301-0.125l-3.875-3.875h-4.399V29.574z M2.425,25.426V28c0,0.868,0.707,1.574,1.575,1.574h11.575
+            v-8.148h-4.398l-3.875,3.875c-0.08,0.08-0.188,0.125-0.301,0.125C7.001,25.426,2.425,25.426,2.425,25.426z M25.176,24.574h4.398
+            v-8.149h-8.148v4.399L25.176,24.574z M2.425,24.574h4.398l3.751-3.75v-4.399H2.425V24.574z M11.425,20.574h9.149v-9.149h-9.149
+            C11.425,11.425,11.425,20.574,11.425,20.574z M21.426,15.575h8.148v-8.15h-4.398l-3.75,3.751
+            C21.426,11.176,21.426,15.575,21.426,15.575z M2.425,15.575h8.149v-4.398l-3.75-3.752H2.425V15.575z M16.425,10.575h4.399
+            L24.699,6.7c0.08-0.08,0.188-0.125,0.301-0.125h4.574V4c0-0.868-0.706-1.575-1.574-1.575H16.425V10.575z M11.176,10.575h4.398v-8.15
+            H4C3.132,2.425,2.425,3.132,2.425,4v2.575H7c0.113,0,0.221,0.044,0.301,0.125L11.176,10.575z"/>
+        </svg>
+      </div>
+      <img id="profile-photo"
+            src="https://api.dicebear.com/9.x/avataaars/svg?backgroundColor=transparent&randomizeIds=true&accessories=prescription02&accessoriesColor=262e33&accessoriesProbability=100&clothesColor=262e33&clothing=hoodie,blazerAndShirt&clothingGraphic[]&eyebrows=default&eyes=default&facialHair=beardLight&facialHairColor=2c1b18&facialHairProbability=100&hairColor=2c1b18&hatColor=262e33&mouth=twinkle&skinColor=ffdbb4&top=hat,shortCurly,shortWaved&seed=Sarah"
+            alt="Profile"/>
+    </div>
+    <div class="card-right">
+      <div id="student-name">Prasun Ghimire</div>
+      <div id="student-bio">
+        Passionate dev who loves <em>JavaScript</em>.
+        Mastering <em>jQuery</em> wizardry. ✨
+      </div>
+      <ul id="skills-list">
+        <li>HTML</li><li>CSS</li><li>JS</li><li>jQUERY</li><li>REACT NATIVE</li>
+      </ul>
+    </div>
+    <div id="nickname-display" style="display: none;"></div>
+  </div>
+
+  <!-- Controls (Bottom Middle) -->
+  <div class="right-col">
+    
+    <div class="section-block glass">
+      <div class="sec-label">1 — Visibility & Identity</div>
+      <div class="btn-row">
+        <button id="btn-show-name">Show Name</button>
+        <button id="btn-toggle-bio">Toggle Bio</button>
+        <button id="btn-toggle-skills">Toggle Skills</button>
+        <button id="btn-toggle-photo">Toggle Photo</button>
+      </div>
+      <input id="nickname-input" type="text" placeholder="Enter card nickname..."/>
+      <div class="btn-row" style="margin-top: 10px;">
+        <button id="btn-get-input">Get Input</button>
+        <button id="btn-set-input">Set Input</button>
+      </div>
+    </div>
+
+    <div class="section-block glass">
+      <div class="sec-label">2 — Style & Theme</div>
+      <div class="btn-row">
+        <button id="btn-toggle-theme">Toggle Red Theme</button>
+        <button id="btn-toggle-rounded">Toggle Photo Shape</button>
+        <button id="btn-toggle-border">Toggle Border</button>
+        <button id="btn-animate-card">Animate Card</button>
+      </div>
+    </div>
+
+    <div class="section-block glass">
+      <div class="sec-label">3 — Effects</div>
+      <div class="btn-row">
+        <button id="btn-fade-in" class="active">Fade In</button>
+        <button id="btn-fade-out">Fade Out</button>
+        <button id="btn-slide-card">Slide Card</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Output -->
+  <div id="output-box" class="glass">
+    <div id="output">System ready...</div>
+  </div>
+
+</div>
+
+<script>
+$(function () {
+  
+  // Initial Card Fade In
+  $('#profile-card').hide().fadeIn('slow');
+
+  // Persistent Nickname variable
+  let savedNickname = "";
+
+  // 1. SHOW NAME (Toggle)
+  $('#btn-show-name').click(function () {
+    $(this).toggleClass('active');
+    if ($(this).hasClass('active')) {
+      $('#student-name').show('slow');
+      $('#output').text("Accessing Identity: " + $('#student-name').text());
+    } else {
+      $('#student-name').hide('slow');
+      $('#output').text("Identity Hidden");
+    }
+  });
+
+  // 2. TOGGLE BIO
+  $('#btn-toggle-bio').click(function () {
+    $(this).toggleClass('active');
+    if ($(this).hasClass('active')) {
+      $('#student-bio').show('fast');
+      $('#output').text("Bio Status: Visible");
+    } else {
+      $('#student-bio').hide('fast');
+      $('#output').text("Bio Status: Hidden");
+    }
+  });
+
+  // 3. TOGGLE SKILLS
+  $('#btn-toggle-skills').click(function () {
+    $(this).toggleClass('active');
+    if ($(this).hasClass('active')) {
+      $('#skills-list').css('display', 'flex').hide().slideDown();
+      $('#output').text("Skills Database: Online");
+    } else {
+      $('#skills-list').slideUp();
+      $('#output').text("Skills Database: Offline");
+    }
+  });
+
+  // 4. TOGGLE PHOTO (Fade)
+  $('#btn-toggle-photo').click(function () {
+    $(this).toggleClass('active');
+    if ($(this).hasClass('active')) {
+      $('#profile-photo').fadeIn('slow');
+      $('#output').text("Photo Sensor Online");
+    } else {
+      $('#profile-photo').fadeOut('slow');
+      $('#output').text("Photo Sensor Offline");
+    }
+  });
+
+  // 5. INPUT LOGIC
+  $('#btn-get-input').click(function () {
+    $(this).toggleClass('active');
+    if ($(this).hasClass('active')) {
+      $('#nickname-input').fadeIn();
+    } else {
+      $('#nickname-input, #nickname-display').fadeOut();
+      $('#btn-set-input').removeClass('active');
+    }
+    let val = $('#nickname-input').val() || "[Empty]";
+    $('#output').text("Current Input Buffer: " + val);
+  });
+
+  $('#btn-set-input').click(function () {
+    if (!$('#btn-get-input').hasClass('active')) {
+      $('#output').text("Error: 'Get Input' must be active first.");
+      return;
+    }
+    $(this).toggleClass('active');
+    if ($(this).hasClass('active')) {
+      savedNickname = $('#nickname-input').val();
+      $('#nickname-display').text(savedNickname).fadeIn();
+      $('#output').text("Nickname Persisted: " + (savedNickname || "None"));
+    } else {
+      $('#nickname-display').fadeOut();
+      $('#output').text("Display Disabled.");
+    }
+  });
+
+  // 6. THEME & STYLE
+  $('#btn-toggle-theme').click(function () {
+    $(this).toggleClass('active');
+    $('body').toggleClass('red-mode');
+    $('#profile-card').toggleClass('red-theme');
+    let theme = $('body').hasClass('red-mode') ? "Red Alert" : "Cyber Blue";
+    $('#output').text("Theme Switched to: " + theme);
+  });
+
+  $('#btn-toggle-border').click(function () {
+    $(this).toggleClass('active');
+    if ($(this).hasClass('active')) {
+      $('#profile-card').css('border-width', '3px');
+      $('#output').text("Border Thickness Increased.");
+    } else {
+      $('#profile-card').css('border-width', '');
+      $('#output').text("Border Thickness Reset.");
+    }
+  });
+
+  // 7. PHOTO SHAPE
+  $('#btn-toggle-rounded').click(function () {
+    $(this).toggleClass('active');
+    $('#profile-photo').css('border-radius', function(i, val) {
+      return val === '50%' ? '12px' : '50%';
+    });
+    $('#output').text("Adjusting Optical Sensor...");
+  });
+
+  // 8. ANIMATION
+  $('#btn-animate-card').click(function () {
+    $(this).toggleClass('active');
+    $('#profile-card')
+      .animate({ top: '-10px' }, 200)
+      .animate({ top: '0px' }, 200);
+    $('#output').text("Card Diagnostics Running...");
+  });
+
+  // 9. EFFECTS
+  $('#btn-fade-in').click(function () {
+    $('#btn-fade-out').removeClass('active');
+    $(this).addClass('active');
+    $('#profile-card').fadeIn();
+    $('#output').text("Card Online.");
+  });
+
+  $('#btn-fade-out').click(function () {
+    $('#btn-fade-in').removeClass('active');
+    $(this).addClass('active');
+    $('#profile-card').fadeOut();
+    $('#output').text("Card Offline.");
+  });
+
+  $('#btn-slide-card').click(function () {
+    $(this).toggleClass('active');
+    $('#profile-card').slideUp().slideDown();
+    $('#output').text("Card Positioning Reset.");
+  });
+
+  // Interactive shadow on hover
+  $('#profile-card').hover(
+    function() { $(this).css('box-shadow', '0 30px 60px rgba(13,227,255,0.2)'); },
+    function() { $(this).css('box-shadow', '0 20px 50px rgba(0,0,0,0.5)'); }
+  );
+
+});
+</script>
+</body>
+</html>
